@@ -65,7 +65,7 @@ type Line struct {
 }
 
 func worker(c chan Line, done []chan bool, id int) {
-
+loop:
 	for {
 		select {
 
@@ -75,12 +75,13 @@ func worker(c chan Line, done []chan bool, id int) {
 		case result := <-done[id-1]:
 
 			if result {
-				break
+				break loop
 			}
 
 		}
 
 	}
+	fmt.Println("the loop broke")
 
 }
 
@@ -94,7 +95,7 @@ func Run4() error {
 	defer file.Close()
 
 	for j := 1; j <= numofGoroutine; j++ {
-		
+
 		go worker(c, done, j)
 	}
 
