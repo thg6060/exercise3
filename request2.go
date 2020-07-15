@@ -31,16 +31,15 @@ func errFunc() {
 ```
 */
 
-func errFunc(wg *sync.WaitGroup) {
+func errFunc() {
 	m := make(map[int]int)
-	var mu = &sync.Mutex{}
 	//Nguyên nhân lỗi do 1000 cái goroutine cùng truy cập và gán giá trí cho map => race condition
-
+      var mu sync.Mutex
 	//Tao 1000 cai goroutine
 	for i := 0; i < 1000; i++ {
-
+        
 		go func() {
-
+            
 			//Moi cai goroutine tao 9999 phan tu map
 			for j := 1; j < 10000; j++ {
 				//Neu m[j] != nil thi xoa
@@ -52,11 +51,11 @@ func errFunc(wg *sync.WaitGroup) {
 				m[j] = j * 10
 				mu.Unlock()
 			}
-
+			
 		}()
-
+	
 	}
-
+    
 	log.Print("done")
 	fmt.Println(len(m))
 

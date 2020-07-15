@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"sync"
 )
 
 /*
@@ -64,13 +65,14 @@ type Line struct {
 	Value string
 }
 
-func worker(c chan Line, done []chan bool, id int) {
+func worker(c chan Line, done []chan bool, id int, wg *sync.WaitGroup) {
 loop:
 	for {
 		select {
 
 		case item := <-c:
 			fmt.Printf("Line number %d have value %s\n", item.Id, item.Value)
+			wg.Done()
 
 		case result := <-done[id-1]:
 
@@ -90,23 +92,28 @@ func Run4() error {
 	c := make(chan Line, 10)
 	numofGoroutine := 3
 	done := make([]chan bool, numofGoroutine)
+	var wg sync.WaitGroup
 
 	file, err := os.Open("file.txt")
 	defer file.Close()
 
 	for j := 1; j <= numofGoroutine; j++ {
-
-		go worker(c, done, j)
+		go worker(c, done, j, &wg)
 	}
 
 	scanner := bufio.NewScanner(file)
 	i := 0
 	for scanner.Scan() {
+		wg.Add(1)
 		i++
 		line := scanner.Text()
 		l := Line{Value: line, Id: i}
 		c <- l
+
 	}
+
+	wg.Wait()
+
 	//nhận tín hiệu true để đóng vòng lặp vô hạn sau khi đã đọc xong
 	for k := range done {
 		done[k] = make(chan bool, 3)
